@@ -1,1 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Web App</title>
+    <style>
+        /* Basic Reset and Body Styling */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            color: white;
+            background: linear-gradient(135deg, #f4a261, #2a9d8f);
+            background-size: 400% 400%;
+            animation: gradientAnimation 15s ease infinite;
+            text-align: center;
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        /* Gradient Background Animation */
+        @keyframes gradientAnimation {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        h1 {
+            font-size: 4em;
+            font-weight: bold;
+            text-shadow: 4px 4px 8px rgba(0, 0, 0, 0.7);
+            margin-bottom: 30px;
+            letter-spacing: 3px;
+            animation: fadeIn 2s ease-out, scaleUp 1s ease-out;
+        }
+
+        /* Fade-in and Scale-up animations */
+        @keyframes fadeIn {
+            0% { opacity: 0; }
+            100% { opacity: 1; }
+        }
+
+        @keyframes scaleUp {
+            0% { transform: scale(0.8); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        p {
+            font-size: 1.4em;
+            margin-bottom: 40px;
+            animation: fadeIn 2s ease-out;
+        }
+
+        /* Button Container */
+        .button-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 30px;
+            width: 80%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Button Styling */
+        .button {
+            background-color: #264653;
+            border: none;
+            color: white;
+            padding: 20px 40px;
+            font-size: 1.4em;
+            font-weight: bold;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.3);
+            animation: slideUp 1s ease-out;
+            background-image: linear-gradient(135deg, #264653, #e76f51);
+        }
+
+        .button:hover {
+            background-color: #e76f51;
+            transform: scale(1.1);
+            box-shadow: 0px 10px 20px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Button slide-up animation */
+        @keyframes slideUp {
+            0% { transform: translateY(20px); opacity: 0; }
+            100% { transform: translateY(0); opacity: 1; }
+        }
+
+        /* Loading Spinner Styling */
+        .loading {
+            border: 8px solid #f3f3f3;
+            border-top: 8px solid #264653;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            animation: spin 2s linear infinite;
+            margin: 30px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Status Text Styling */
+        .status-text {
+            margin-top: 20px;
+            font-size: 1.6em;
+            color: #e76f51;
+            font-weight: bold;
+            animation: fadeIn 1s ease-out;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            cursor: pointer;
+        }
+
+        .status-text:hover {
+            color: #f4a261;
+            text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.6);
+        }
+
+        /* Floating Voice Helper Icon */
+        .helper-icon {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: #e76f51;
+            color: white;
+            padding: 15px;
+            border-radius: 50%;
+            font-size: 1.8em;
+            box-shadow: 0px 6px 18px rgba(0, 0, 0, 0.3);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .helper-icon:hover {
+            background-color: #264653;
+            transform: scale(1.1);
+        }
+    </style>
+    <script>
+        // Function to speak text using the Web Speech API
+        function speakText(text) {
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'en-US';
+            window.speechSynthesis.speak(utterance);
+        }
+
+        // Show loading spinner when fetching
+        function showLoading() {
+            const loadingSpinner = document.getElementById('loading-spinner');
+            loadingSpinner.style.display = 'block';
+            document.getElementById('status-text').innerText = 'Processing your request...';
+        }
+
+        // Hide loading spinner when fetch is complete
+        function hideLoading() {
+            const loadingSpinner = document.getElementById('loading-spinner');
+            loadingSpinner.style.display = 'none';
+            document.getElementById('status-text').innerText = '';
+        }
+
+        function handleButtonClick(action) {
+            showLoading();
+
+            fetch(`/${action}`, {
+                method: 'POST',
+            })
+            .then(response => response.json())
+            .then(data => {
+                const message = data.message || data.error;
+                let friendlyMessage = "";
+
+                if (action === 'video') {
+                    friendlyMessage = "Video detection is ready! What would you like to do next?";
+                } else if (action === 'image') {
+                    friendlyMessage = "Image text detection is complete! Do you want to proceed with another task?";
+                } else if (action === 'route') {
+                    friendlyMessage = "Route navigation is ready! Would you like to continue?";
+                } else {
+                    friendlyMessage = `Sure thing! ${message}`;
+                }
+
+                speakText(friendlyMessage);
+                document.getElementById('status-text').innerText = friendlyMessage;
+                hideLoading();
+            })
+            .catch(error => {
+                const errorMessage = 'Oops, something went wrong: ' + error;
+                speakText(errorMessage);
+                document.getElementById('status-text').innerText = errorMessage;
+                hideLoading();
+            });
+        }
+
+        // Voice command integration
+        function startVoiceRecognition() {
+            if (!('webkitSpeechRecognition' in window)) {
+                const errorText = 'Sorry, your browser does not support voice commands.';
+                speakText(errorText);
+                document.getElementById('status-text').innerText = errorText;
+                return;
+            }
+
+            const recognition = new webkitSpeechRecognition();
+            recognition.lang = 'en-US';
+            recognition.start();
+
+            recognition.onresult = function(event) {
+                const command = event.results[0][0].transcript.toLowerCase();
+
+                // Conversational responses based on commands
+                if (command.includes('video')) {
+                    const response = "Got it! Starting video detection now!";
+                    speakText(response);
+                    document.getElementById('status-text').innerText = response;
+                    handleButtonClick('video');
+                } else if (command.includes('image')) {
+                    const response = "Sure! I'll work on the image text detection.";
+                    speakText(response);
+                    document.getElementById('status-text').innerText = response;
+                    handleButtonClick('image');
+                } else if (command.includes('route')) {
+                    const response = "Okay! Let me guide you through the route navigation.";
+                    speakText(response);
+                    document.getElementById('status-text').innerText = response;
+                    handleButtonClick('route');
+                } else {
+                    const notRecognizedText = 'Sorry, I didn’t quite catch that. Please say "video," "image," or "route."';
+                    speakText(notRecognizedText);
+                    document.getElementById('status-text').innerText = notRecognizedText;
+                }
+            };
+
+            recognition.onerror = function() {
+                const errorText = 'Sorry, I had trouble understanding. Please try again.';
+                speakText(errorText);
+                document.getElementById('status-text').innerText = errorText;
+            };
+        }
+
+        // Speak welcome message on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            speakText('Welcome to Vision Assist App. I am here to help you!');
+        });
+
+        // Provide helpful tips when the helper icon is clicked
+        function provideHelperTip() {
+            const tip = "Click a button to start video detection, image text recognition, or route navigation. You can also use voice commands for hands-free control!";
+            speakText(tip);
+        }
+    </script>
+</head>
+<body>
+    <h1>VISION ASSIST APP</h1>
+    <p>Use the buttons below or voice commands ("video," "image," or "route").</p>
+
+    <div class="image-container">
+        <img src="img2.png" width="600" height="350" alt="Example" />
+    </div>
+
+    <!-- Button Container -->
+    <div class="button-container">
+        <button class="button" onclick="handleButtonClick('video')">🎥 Video Detection</button>
+        <button class="button" onclick="handleButtonClick('image')">🖼️ Image Text Detection</button>
+        <button class="button" onclick="handleButtonClick('route')">📍 Route Navigation</button>
+    </div>
+
+    <!-- Voice Command Button -->
+    <div class="container">
+        <button class="button" onclick="startVoiceRecognition()">🎤 Start Voice Command</button>
+    </div>
+
+    <!-- Loading Spinner -->
+    <div id="loading-spinner" class="loading" style="display: none;"></div>
+
+    <!-- Status Text -->
+    <div id="status-text" class="status-text"></div>
+
+    <!-- Floating Voice Helper Icon -->
+    <div class="helper-icon" onclick="provideHelperTip()">❓</div>
+
+</body>
+</html>
+
 
